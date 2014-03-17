@@ -96,24 +96,6 @@
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
     </dependency>
-
-    <!-- Webjars -->
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>jasmine</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>jasmine-jquery</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>jquery</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>jasmine-reporters</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
