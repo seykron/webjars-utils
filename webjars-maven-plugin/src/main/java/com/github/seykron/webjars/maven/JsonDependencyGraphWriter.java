@@ -2,6 +2,7 @@ package com.github.seykron.webjars.maven;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,18 +50,28 @@ public class JsonDependencyGraphWriter extends DependencyGraphWriter {
     Iterator<Entry<DependencyInfo, List<DependencyInfo>>> it;
     it = dependencyGraph.entrySet().iterator();
 
-    writer.write("[");
+    JSONObject index = new JSONObject();
+    JSONObject table = new JSONObject();
 
     while (it.hasNext()) {
       Entry<DependencyInfo, List<DependencyInfo>> entry = it.next();
+      DependencyInfo dependency = entry.getKey();
 
-      writer.write(toJson(entry.getKey(), entry.getValue()));
+      List<String> files = new ArrayList<String>();
+      files.addAll(dependency.getJsFiles());
+      files.addAll(dependency.getCssFiles());
 
-      if (it.hasNext()) {
-        writer.write(",");
+      for (String file : files) {
+        index.put(file, dependency.getId());
       }
+
+      table.put(dependency.getId(), toJson(dependency, entry.getValue()));
     }
-    writer.write("]");
+    JSONObject jsonDependencyGraph = new JSONObject();
+    jsonDependencyGraph.put("index", index);
+    jsonDependencyGraph.put("table", table);
+
+    writer.write(jsonDependencyGraph.toString());
   }
 
   /** Converts the specified dependency to JSON.
@@ -69,7 +80,7 @@ public class JsonDependencyGraphWriter extends DependencyGraphWriter {
    * @param dependencies List of immediate dependencies. Cannot be null.
    * @return a valid JSON, never null or empty.
    */
-  private String toJson(final DependencyInfo parent,
+  private JSONObject toJson(final DependencyInfo parent,
       final List<DependencyInfo> dependencies) {
     JSONObject jsonDependency = new JSONObject();
 
@@ -85,6 +96,6 @@ public class JsonDependencyGraphWriter extends DependencyGraphWriter {
       jsonDependencies.put(dependency.getId());
     }
     jsonDependency.put("dependencies", jsonDependencies);
-    return jsonDependency.toString();
+    return jsonDependency;
   }
 }

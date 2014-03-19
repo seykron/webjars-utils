@@ -1,10 +1,6 @@
 package com.github.seykron.webjars;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang.Validate;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.github.seykron.webjars.WebJarResource.MediaType;
@@ -13,17 +9,21 @@ import com.github.seykron.webjars.WebJarResource.MediaType;
  */
 public class DependencyGraph {
 
-  /** Dependency graph as JSON, it's never null. */
-  private final JSONArray dependencyGraph;
+  /** Index to lookup dependencies from files, it's never null. */
+  private final JSONObject index;
+
+  /** Table with mappings from dependency id to dependency, it's never null. */
+  private final JSONObject table;
 
   /** Creates a dependency graph and sets the JSON data.
    *
    * @param theDependencyGraph Dependency graph as JSON. Cannot be null.
    */
-  public DependencyGraph(final JSONArray theDependencyGraph) {
+  public DependencyGraph(final JSONObject theDependencyGraph) {
     Validate.notNull(theDependencyGraph,
         "The dependency graph cannot be null.");
-    dependencyGraph = theDependencyGraph;
+    index = theDependencyGraph.getJSONObject("index");
+    table = theDependencyGraph.getJSONObject("table");
   }
 
   /** Searches for the specified dependency in the graph.
@@ -39,17 +39,20 @@ public class DependencyGraph {
         "The dependency id cannot be null or empty.");
     Validate.notNull(type, "The resource type cannot be null.");
 
-    for (int i = 0; i < dependencyGraph.length(); i++) {
-      JSONObject dependency = (JSONObject) dependencyGraph.get(i);
+    WebJarResource resource = null;
+    JSONObject dependency = table.getJSONObject(dependencyId);
 
-      if (dependencyId.equalsIgnoreCase(dependency.getString("id"))) {
-        return new WebJarResource(this, dependency, type);
-      }
+    if (dependencyId.equalsIgnoreCase(dependency.getString("id"))) {
+      resource = new WebJarResource(this, dependency, type);
     }
-    return null;
+
+    return resource;
   }
 
-  /** Finds a dependency from its path according to WebJars specification.
+  /** Finds a dependency from a file path. It uses the following format:
+   * <pre>
+   * /webjars/${artifact-name}/${artifact-version}/${file-name}
+   * </pre>
    *
    * @param thePath Required webjar path. Cannot be null or empty.
    * @param type Type of resource. Cannot be null.
@@ -57,23 +60,20 @@ public class DependencyGraph {
    */
   public WebJarResource findDependencyByPath(final String thePath,
       final MediaType type) {
-    Validate.notEmpty(thePath, "The dependency path cannot be null.");
+    Validate.notEmpty(thePath, "The dependency path cannot be null or empty.");
 
-    String url = thePath;
+    String path = thePath;
 
-    if (url.startsWith("/")) {
-      url = url.substring(1);
+    if (path.startsWith("/")) {
+      path = path.substring(1);
     }
-
-    List<String> pathAttrib = Arrays.asList(url.split("/"));
-    if (!"webjars".equalsIgnoreCase(pathAttrib.get(0))) {
-      return null;
+    if (path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
     }
+    path = "META-INF/resources/" + path;
 
-    String name = pathAttrib.get(1);
-    String version = pathAttrib.get(2);
-    String dependencyId = "org.webjars:" + name + ":jar:" + version;
+    Validate.isTrue(index.has(path), "File not found: " + thePath);
 
-    return findDependencyById(dependencyId, type);
+    return findDependencyById(index.getString(path), type);
   }
 }

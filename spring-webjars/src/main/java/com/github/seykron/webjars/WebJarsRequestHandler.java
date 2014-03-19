@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -54,7 +54,7 @@ public class WebJarsRequestHandler extends ResourceHttpRequestHandler
 
     try {
       dependencyGraph = new DependencyGraph(
-          new JSONArray(IOUtils.toString(in)));
+          new JSONObject(IOUtils.toString(in)));
     } catch (Exception cause) {
       throw new RuntimeException("Cannot create dependency graph.", cause);
     } finally {

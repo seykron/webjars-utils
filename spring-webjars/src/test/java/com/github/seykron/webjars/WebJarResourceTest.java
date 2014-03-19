@@ -8,7 +8,6 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,12 +27,15 @@ public class WebJarResourceTest {
   @Before
   public void setUp() throws Exception {
     ClassLoader classLoader = new TestClassLoader();
-    JSONArray jsonDependencyGraph = new JSONArray(IOUtils.toString(classLoader
+    JSONObject jsonDependencyGraph = new JSONObject(IOUtils.toString(classLoader
         .getResource("com/github/seykron/webjars/deps.js")));
     dependencyGraph = new DependencyGraph(jsonDependencyGraph);
 
-    for (int i = 0; i < jsonDependencyGraph.length(); i++) {
-      JSONObject jsonDependency = jsonDependencyGraph.getJSONObject(i);
+    JSONObject jsonTable = jsonDependencyGraph.getJSONObject("table");
+
+    for (Object dependencyId : jsonTable.keySet()) {
+      JSONObject jsonDependency = jsonTable
+          .getJSONObject((String) dependencyId);
       if ("jasmine-jquery".equals(jsonDependency.getString("name"))) {
         dependencyDescriptor = jsonDependency;
         break;
